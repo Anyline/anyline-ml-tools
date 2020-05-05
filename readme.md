@@ -43,10 +43,10 @@ batch_augmentor = ia.Sequential([
     # random rotation -15 to 15 degrees and scaling
     ia.Affine(rotation=15.0, scale=(0.8, 1.2)),  
     
-    # crop random region of size (120, 100)
+    # crop random region of size (45, 45)
     ia.RandomCrop(size=(45, 45)),  
 
-    # crop central region of size (80, 60)
+    # crop central region of size (40, 40)
     ia.CenterCrop(size=(40, 40)),  
 
     # adjust brightness and contrast
