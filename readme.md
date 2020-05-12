@@ -64,7 +64,7 @@ dataset = batch_augmentor.update(dataset)  # applied to batch
 
 ```
 
-###### Example 2. Augmenting detection data:
+###### Example 2. Augmenting detection / segmentation data:
 
 ```python
 import anyline_mltools.augment as ia
@@ -77,7 +77,7 @@ dataset = tf.data.map(decode_tfrecord)
 
 # Example for detection problem. 
 # Note that `augment_label=True` - same transformation is applied for image and mask
-detector_batch_augmentor = ia.Sequential([
+augmentor = ia.Sequential([
     # random crop region 80 x 150 pixels
     ia.RandomCrop(size=(80, 150), augment_label=True),  
    
@@ -97,7 +97,7 @@ detector_batch_augmentor = ia.Sequential([
     ia.NormalizeMeanStd() 
 ])  # in this case batch_level=False
 
-dataset = detector_batch_augmentor.update(dataset)  # augment individual images
+dataset = augmentor.update(dataset)  # augment individual images
 dataset = dataset.batch(32)  # prepare batches
 
 ...
