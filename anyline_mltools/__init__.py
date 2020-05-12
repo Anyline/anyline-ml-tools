@@ -16,5 +16,8 @@ __all__ = [
     'augment.DivisibleCrop',
     'augment.DivisiblePad'
     'augment.Sequential',
-    'augment.SequentialGPU'
+    'augment.SequentialGPU',
+    'callbacks.EpochTimeCallback',
+    'utils.init_device',
+    'utils.find_best_weights'
 ]
