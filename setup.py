@@ -13,6 +13,6 @@ setup(name='anyline_mltools',
       url='https://githsub.com/pypa/sampleproject',
       install_requires=[
             "tensorflow_gpu>=2.1",
-            "tensorflow_addons",
+            "tensorflow_addons==0.9.1",
             "numpy"
       ])
