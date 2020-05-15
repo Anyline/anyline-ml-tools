@@ -25,7 +25,7 @@ def tf_gaussian_kernel(channels, kernel_size, sigma):
     ax = tf.range(-kernel_size, kernel_size + 1.0)
     xx, yy = tf.meshgrid(ax, ax)
     kernel = tf.exp(-(xx ** 2 + yy ** 2) / (2.0 * sigma ** 2))
-    kernel = kernel / tf.reduce_sum(kernel)
+    kernel = kernel / (tf.reduce_sum(kernel) + 1.0e-7)
     kernel = tf.tile(kernel[..., tf.newaxis], [1, 1, channels])
     return kernel
 
@@ -137,7 +137,7 @@ def tf_normalize_mean_std(images):
 def tf_random_brightness_contrast(image, brightness, contrast):
     """Random brightness/contrast adjustment"""
     out_image = tf.cast(image, tf.float32)
-    out_image = out_image / tf.reduce_max(out_image)
+    out_image = out_image / (tf.reduce_max(out_image) + 1.0e-7)
     out_image = (out_image - 0.5) * tf.random.uniform((), minval=contrast[0], maxval=contrast[1]) + 0.5
     out_image = out_image + tf.random.uniform((), minval=brightness[0], maxval=brightness[1])
     return tf.clip_by_value(out_image, 0.0, 1.0)
@@ -531,7 +531,7 @@ class RescaleIntensities(Augmentor):
         @tf.function
         def tf_rescale_intensities(images, factor):
             out_images = tf.cast(images, tf.float32)
-            return factor * out_images / tf.math.reduce_max(out_images)
+            return factor * out_images / (tf.math.reduce_max(out_images) + 1.0e-7)
 
         if self.augment_label:
             return tf_duplicated_transform_fn(tf_rescale_intensities, True, batch_level, None, self.scale_factor)

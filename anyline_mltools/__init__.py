@@ -11,10 +11,10 @@ __all__ = [
     'augment.BrightnessContrast',
     'augment.RescaleIntensities',
     'augment.BoxBlur',
-    'augment.GaussianBlur'
+    'augment.GaussianBlur',
     'augment.GaussianNoise',
     'augment.DivisibleCrop',
-    'augment.DivisiblePad'
+    'augment.DivisiblePad',
     'augment.Sequential',
     'augment.SequentialGPU',
     'callbacks.EpochTimeCallback',
