@@ -1,7 +1,8 @@
+import sys
 import numpy as np
 import tensorflow as tf
 import tensorflow_addons as tfa
-
+from collections.abc import Iterable
 
 ########################################################################################################################
 #
@@ -170,20 +171,20 @@ def tf_box_blur(image, max_size, prob):
 
 def init_size(value):
     """Makes a tuple from the value"""
-    if type(value) == tuple:
+    if isinstance(value, Iterable):
         return value
     elif type(value) == int:
-        return (value, value)
+        return value, value
     else:
         raise RuntimeError("Type %s is not supported!" % (str(type(value))))
 
 
 def init_range(value):
     """Initializes a range the value"""
-    if type(value) == tuple:
+    if isinstance(value, Iterable):
         return value
     elif type(value) == int or type(value) == float:
-        return (-value, value)
+        return -value, value
     else:
         raise RuntimeError("Type %s is not supported!" % (str(type(value))))
 
@@ -192,7 +193,7 @@ def init_scale_range(value):
     """Initializes a range the scaling value"""
     if type(value) == int or type(value) == float:
         return (min(value, 1.0), max(value, 1.0))
-    elif type(value) == tuple:
+    elif isinstance(value, Iterable):
         return value
     else:
         raise RuntimeError("Type %s is not supported!" % (str(type(value))))
@@ -728,6 +729,40 @@ class Sequential(object):
         for op in self.ops:
             dataset = op.augment(dataset, self.batch_level)
         return dataset
+
+    @staticmethod
+    def from_dict(operations):
+        """
+        Create augmentation pipeline from list of dictionaries.
+
+        Format of input:
+            [
+                ["op1", {"param1": val1, "param2": val2, ...}],
+                ["op2", {"param1": val1, "param2": val2, ...}]
+                ...
+                ["op"]  # Operation without parameters
+            ]
+
+        Example:
+            [
+                ["Affine", {"rotation": 3.0, "scale": [0.95, 1.05]}],
+                ["CenterCrop", {"size":  [70, 440]}],
+                ["NormalizeMeanStd"]
+            ]
+
+        Returns:
+            result (Sequential) object
+
+        """
+
+        op_objects = []
+        for operation in operations:
+            op_name, op_args = operation[0], operation[1] if len(operation) > 1 else None
+
+            op_class = getattr(sys.modules[__name__], op_name)
+            op_objects.append(op_class(**op_args) if op_args else op_class())
+
+        return Sequential(op_objects)
 
 
 class SequentialGPU(object):
