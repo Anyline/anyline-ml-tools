@@ -118,3 +118,4 @@ The following augmentation operations are implemented:
 * GaussianBlur;
 * DivisibleCrop;
 * DivisiblePad;
+* CenterPad

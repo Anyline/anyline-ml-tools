@@ -69,6 +69,12 @@ def tf_center_crop(images, sides):
 
 
 @tf.function
+def tf_center_pad(image, pad_rows, pad_cols, mode):
+    """Pad image such that it remains in the center"""
+    return tf.pad(image, [(pad_rows, pad_rows), (pad_cols, pad_cols), (0, 0)], mode=mode)
+
+
+@tf.function
 def tf_divisible_crop(image, divisor_rows, divisor_cols):
     """Crops image such that its sides are divisible by given factors"""
     image_shape = tf.shape(image)
@@ -361,7 +367,7 @@ class Affine(Augmentor):
 
     Args:
         rotation (float or tuple) : min and max value of rotation angle (in degrees)
-        scale (float or tuple) : min and max scale value, 1.0 means no scaling, <1.0 - zoom out, >1.0 - zoom in
+        scale (float or tuple) : min and max scale value, 1.0 means no scaling, >1.0 - zoom out, <1.0 - zoom in
         num_parallel_calls (int) : the number of parallel processes (see documentation of Augmentor class)
         augment_label (bool) : if True the same transformation is applied to label.
 
@@ -650,7 +656,7 @@ class DivisiblePad(Augmentor):
                  augment_label=False):
 
         super(DivisiblePad, self).__init__(num_parallel_calls, augment_label)
-        self.div_factors = div_factors
+        self.div_factors = init_size(div_factors)
         self.mode = mode
 
     def transform_fn(self, batch_level=False):
@@ -666,6 +672,45 @@ class DivisiblePad(Augmentor):
         else:
             return tf_apply_transform_fn(tf_divisible_pad, False, batch_level, None,
                                          self.div_factors[0], self.div_factors[1], self.mode)
+
+
+class CenterPad(Augmentor):
+    """
+    Applies center padding of the image (each side).
+    Argument `size` can be single integer or a tuple: (`height`, `width`). If single integer, image is extended
+    by `size` pixels to the left, right, top and bottom, respectively. If `size` is tuple, `height` values is used to
+    pad image from the top and below, and `width` from left and right.
+
+    Args:
+        size (int or tuple) : either single integer or tuple: (`pad_height`, `pad_width`)
+        mode (str): "REFLECT" (default), "CONSTANT" (0), "SYMMETRIC"
+
+    Attributes:
+        size (int or tuple) : see above
+        mode (str): see above
+
+    """
+    def __init__(self, size, mode="REFLECT", num_parallel_calls=tf.data.experimental.AUTOTUNE,
+                 augment_label=False):
+
+        super(CenterPad, self).__init__(num_parallel_calls, augment_label)
+        self.factors = init_size(size)
+        self.factors = init_size(size)
+        self.mode = mode
+
+    def transform_fn(self, batch_level=False):
+        """Returns Tensorflow function which performs center padding
+
+        Args:
+            batch_level (bool): if True, returned function processes image batches, otherwise individual images
+
+        """
+        if self.augment_label:
+            return tf_duplicated_transform_fn(tf_center_pad, False, batch_level, None,
+                                              self.factors[0], self.factors[1], self.mode)
+        else:
+            return tf_apply_transform_fn(tf_center_pad, False, batch_level, None,
+                                         self.factors[0], self.factors[1], self.mode)
 
 
 class Sequential(object):

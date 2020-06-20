@@ -15,6 +15,7 @@ __all__ = [
     'augment.GaussianNoise',
     'augment.DivisibleCrop',
     'augment.DivisiblePad',
+    'augment.CenterPad',
     'augment.Sequential',
     'augment.SequentialGPU',
     'callbacks.EpochTimeCallback',
