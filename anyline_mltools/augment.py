@@ -151,6 +151,31 @@ def tf_random_brightness_contrast(image, brightness, contrast):
 
 
 @tf.function
+def tf_random_hsv(images, hue, saturation, value, seed=None):
+    """Randomly adjust hue and saturation"""
+    images_shape = tf.shape(images)
+    batch_size = images_shape[0]
+
+    # Rescale images
+    images_rescaled = tf.cast(images, tf.float32)
+    images_rescaled = images_rescaled / (tf.math.reduce_max(images_rescaled) + 1.0e-7)
+    hsv_images = tf.image.rgb_to_hsv(images_rescaled)
+
+    # Sample random HSV transformations
+    random_hue = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=hue[0], maxval=hue[1], seed=seed)
+    random_value = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=value[0], maxval=value[1], seed=seed)
+    random_saturation = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=saturation[0], maxval=saturation[1], seed=seed)
+
+    # Augment image
+    new_hue = tf.clip_by_value(hsv_images[:, :, :, 0] + random_hue, 0, 1)
+    new_saturation = tf.clip_by_value(hsv_images[:, :, :, 1] * random_saturation, 0, 1)
+    new_value = tf.clip_by_value(hsv_images[:, :, :, 2] + random_value, 0, 1)
+    augmented = tf.stack([new_hue, new_saturation, new_value], axis=-1)
+
+    return tf.image.hsv_to_rgb(augmented)
+
+
+@tf.function
 def tf_box_blur(image, max_size, prob):
     """Random box blur with given probability"""
     if tf.random.uniform(shape=()) >= prob:
@@ -198,7 +223,7 @@ def init_range(value):
 def init_scale_range(value):
     """Initializes a range the scaling value"""
     if type(value) == int or type(value) == float:
-        return (min(value, 1.0), max(value, 1.0))
+        return min(value, 1.0), max(value, 1.0)
     elif isinstance(value, Iterable):
         return value
     else:
@@ -449,11 +474,54 @@ class BrightnessContrast(Augmentor):
 
         """
         if self.augment_label:
-            return tf_duplicated_transform_fn(tf_random_brightness_contrast, True, batch_level, None,
+            return tf_duplicated_transform_fn(tf_random_brightness_contrast, False, batch_level, None,
                                               self.brightness, self.contrast)
         else:
-            return tf_apply_transform_fn(tf_random_brightness_contrast, True, batch_level, None,
+            return tf_apply_transform_fn(tf_random_brightness_contrast, False, batch_level, None,
                                          self.brightness, self.contrast)
+
+
+class HSV(Augmentor):
+    """
+    Performs random adjustments of image hue, saturation and value.
+    Input image must be tf.float32 with intensities in the range [0.0, 1.0]. The resulting image has the same format.
+
+    Args:
+        hue (float or tuple) : range of random additive hue (if single number, brightness is randomly
+            sampled from the range (-brightness, brightness).
+        saturation (float or tuple) : range of random multiplicative contrast (if single number, saturation is randomly
+            sampled from the range (min(contrast, 1.0), max(contrast, 1.0))
+        value (float or tuple) : range of random additive value (if single number, brightness is randomly
+            sampled from the range (-value, value).
+
+        num_parallel_calls (int) : the number of parallel processes (see documentation of Augmentor class)
+        augment_label (bool) : if True the same transformation is applied to label.
+
+    Attributes:
+        hue (tuple) : tuple of two float values (minimum and maximum hue factors)
+        saturation (tuple) : tuple of two float values (minimum and maximum saturation factors)
+
+    """
+    def __init__(self, hue=0.0, saturation=1.0, value=0.0, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+                 augment_label=False):
+        super(HSV, self).__init__(num_parallel_calls, augment_label)
+        self.hue = init_range(hue)
+        self.saturation = init_scale_range(saturation)
+        self.value = init_range(value)
+
+    def transform_fn(self, batch_level=False):
+        """Returns Tensorflow function performing random adjustments of brightness / contrast
+
+        Args:
+            batch_level (bool): if True, returned function processes image batches, otherwise individual images
+
+        """
+        if self.augment_label:
+            return tf_duplicated_transform_fn(tf_random_hsv, True, batch_level, None,
+                                              self.hue, self.saturation, self.value)
+        else:
+            return tf_apply_transform_fn(tf_random_hsv, True, batch_level, None,
+                                         self.hue, self.saturation, self.value)
 
 
 class GaussianNoise(Augmentor):

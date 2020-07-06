@@ -9,6 +9,7 @@ __all__ = [
     'augment.Affine',
     'augment.NormalizeMeanStd',
     'augment.BrightnessContrast',
+    'augment.HSV',
     'augment.RescaleIntensities',
     'augment.BoxBlur',
     'augment.GaussianBlur',

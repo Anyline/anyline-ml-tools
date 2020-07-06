@@ -112,6 +112,7 @@ The following augmentation operations are implemented:
 * Affine;
 * NormalizeMeanStd;
 * BrightnessContrast;
+* HSV;
 * GaussianNoise;
 * RescaleIntensities;
 * BoxBlur;
