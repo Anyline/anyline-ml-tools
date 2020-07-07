@@ -162,15 +162,15 @@ def tf_random_hsv(images, hue, saturation, value, seed=None):
     hsv_images = tf.image.rgb_to_hsv(images_rescaled)
 
     # Sample random HSV transformations
-    random_hue = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=hue[0], maxval=hue[1], seed=seed)
-    random_value = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=value[0], maxval=value[1], seed=seed)
-    random_saturation = tf.random.uniform(shape=(batch_size, 1, 1, 1), minval=saturation[0], maxval=saturation[1], seed=seed)
+    random_hue = tf.random.uniform(shape=(batch_size, 1, 1), minval=hue[0], maxval=hue[1], seed=seed)
+    random_value = tf.random.uniform(shape=(batch_size, 1, 1), minval=value[0], maxval=value[1], seed=seed)
+    random_saturation = tf.random.uniform(shape=(batch_size, 1, 1), minval=saturation[0], maxval=saturation[1], seed=seed)
 
     # Augment image
     new_hue = tf.clip_by_value(hsv_images[:, :, :, 0] + random_hue, 0, 1)
     new_saturation = tf.clip_by_value(hsv_images[:, :, :, 1] * random_saturation, 0, 1)
     new_value = tf.clip_by_value(hsv_images[:, :, :, 2] + random_value, 0, 1)
-    augmented = tf.stack([new_hue, new_saturation, new_value], axis=-1)
+    augmented = tf.stack([new_hue, new_saturation, new_value], axis=3)
 
     return tf.image.hsv_to_rgb(augmented)
 
