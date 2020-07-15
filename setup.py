@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='anyline_mltools',
-      version='1.0.2',
+      version='1.0.3',
       description='Anyline ML Packages and Libraries',
       author='Dmytro Kotsur',
       author_email='dmytro@anyline.com',
@@ -13,6 +13,6 @@ setup(name='anyline_mltools',
       url='https://github.com/Anyline/anyline-ml-tools',
       install_requires=[
             "tensorflow_gpu>=2.1",
-            "tensorflow_addons==0.9.1",
+            "tensorflow_addons>=0.9.1",
             "numpy"
       ])
