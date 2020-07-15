@@ -17,7 +17,7 @@ pip install git+https://github.com/Anyline/anyline-ml-tools.git
 ## Requirements
 
 * tensorflow_gpu >= 2.1
-* tensorflow_addons == 0.9.1
+* tensorflow_addons >= 0.9.1
 * numpy
 
 
