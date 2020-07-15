@@ -844,7 +844,7 @@ class Sequential(object):
         return dataset
 
     @staticmethod
-    def from_dict(operations):
+    def from_dict(operations, batch_level=False):
         """
         Create augmentation pipeline from list of dictionaries.
 
@@ -875,7 +875,7 @@ class Sequential(object):
             op_class = getattr(sys.modules[__name__], op_name)
             op_objects.append(op_class(**op_args) if op_args else op_class())
 
-        return Sequential(op_objects)
+        return Sequential(op_objects, batch_level)
 
 
 class SequentialGPU(object):
