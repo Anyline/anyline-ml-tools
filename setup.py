@@ -12,7 +12,7 @@ setup(name='anyline_mltools',
       python_requires='>=3.6',
       url='https://github.com/Anyline/anyline-ml-tools',
       install_requires=[
-            "tensorflow_gpu==2.1",
-            "tensorflow_addons==0.9.1",
+            "tensorflow_gpu>=2.1",
+            "tensorflow_addons>=0.9.1",
             "numpy"
       ])
