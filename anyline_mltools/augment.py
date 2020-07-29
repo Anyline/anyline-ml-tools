@@ -35,7 +35,7 @@ def tf_gaussian_kernel(channels, kernel_size, sigma):
 def tf_gaussian_blur(image, sigma_range, prob):
     """Applies random gaussian blur with given probability"""
     if tf.random.uniform(shape=()) > prob:
-        return image
+        return tf.cast(image, tf.float32)
 
     sigma = tf.random.uniform((), minval=sigma_range[0], maxval=sigma_range[0], dtype=tf.float32)
     size = tf.maximum(1.0, tf.floor(1.5 * sigma))
@@ -179,7 +179,7 @@ def tf_random_hsv(images, hue, saturation, value, seed=None):
 def tf_box_blur(image, max_size, prob):
     """Random box blur with given probability"""
     if tf.random.uniform(shape=()) >= prob:
-        return image
+        return tf.cast(image, tf.float32)
 
     size = tf.random.uniform((), minval=0, maxval=(max_size + 1) // 2, dtype=tf.int32)
     ksize = 2 * size + 1
@@ -474,10 +474,10 @@ class BrightnessContrast(Augmentor):
 
         """
         if self.augment_label:
-            return tf_duplicated_transform_fn(tf_random_brightness_contrast, False, batch_level, None,
+            return tf_duplicated_transform_fn(tf_random_brightness_contrast, False, batch_level, tf.float32,
                                               self.brightness, self.contrast)
         else:
-            return tf_apply_transform_fn(tf_random_brightness_contrast, False, batch_level, None,
+            return tf_apply_transform_fn(tf_random_brightness_contrast, False, batch_level, tf.float32,
                                          self.brightness, self.contrast)
 
 
@@ -567,13 +567,13 @@ class GaussianNoise(Augmentor):
                 output_image = image + tf.random.normal(tf.shape(image), stddev=std)
                 return tf.clip_by_value(output_image, min_value, max_value)
             else:
-                return image
+                return tf.cast(image, tf.float32)
 
         if self.augment_label:
-            return tf_duplicated_transform_fn(tf_random_gaussian_noise, False, batch_level, None,
+            return tf_duplicated_transform_fn(tf_random_gaussian_noise, False, batch_level, tf.float32,
                                               self.min_std, self.max_std, self.prob)
         else:
-            return tf_apply_transform_fn(tf_random_gaussian_noise, False, batch_level, None,
+            return tf_apply_transform_fn(tf_random_gaussian_noise, False, batch_level, tf.float32,
                                          self.min_std, self.max_std, self.prob)
 
 
