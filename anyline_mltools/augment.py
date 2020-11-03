@@ -176,6 +176,21 @@ def tf_random_hsv(images, hue, saturation, value, seed=None):
 
 
 @tf.function
+def tf_invert(image):
+    """Invert image colour channels"""
+    max_color = tf.reduce_max(image, axis=(0, 1))
+    return max_color - image
+
+
+@tf.function
+def tf_random_invert(image, prob):
+    """Randomly inverts image colors"""
+    if tf.random.uniform(shape=()) > prob:
+        return image
+    return tf_invert(image)
+
+
+@tf.function
 def tf_box_blur(image, max_size, prob):
     """Random box blur with given probability"""
     if tf.random.uniform(shape=()) >= prob:
@@ -198,7 +213,6 @@ def tf_box_blur(image, max_size, prob):
 # Augmentation Classes and Utility Functions
 #
 ########################################################################################################################
-
 
 def init_size(value):
     """Makes a tuple from the value"""
@@ -522,6 +536,31 @@ class HSV(Augmentor):
         else:
             return tf_apply_transform_fn(tf_random_hsv, True, batch_level, None,
                                          self.hue, self.saturation, self.value)
+
+
+class InvertColor(Augmentor):
+    """
+    Performs random image inversion
+
+    Args:
+        prob (float) : probability of this transformation in the range [0, 1]
+
+    Attributes:
+        prob (float) : probability of this transformation in the range [0, 1]
+
+    """
+    def __init__(self, prob=0.5, num_parallel_calls=tf.data.experimental.AUTOTUNE, **kwargs):
+        super(InvertColor, self).__init__(num_parallel_calls, False)
+        self.prob = prob
+
+    def transform_fn(self, batch_level=False):
+        """Returns Tensorflow function which performs random box blur
+
+        Args:
+            batch_level (bool): if True, returned function processes image batches, otherwise individual images
+
+        """
+        return tf_apply_transform_fn(tf_random_invert, False, batch_level, None, self.prob)
 
 
 class GaussianNoise(Augmentor):

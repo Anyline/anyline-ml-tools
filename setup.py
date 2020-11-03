@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='anyline_mltools',
-      version='1.0.4',
+      version='1.0.5a1',
       description='Anyline Machine Learning Tools',
       author='Dmytro Kotsur',
       author_email='dmytro@anyline.com',
