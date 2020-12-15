@@ -100,7 +100,7 @@ def tf_generate_random_transform(center_x, center_y, transform_n, rotate_range=(
                                  scale_range=(1.0, 1.0), seed=None):
     """Generate random random transformation matrix: tf.Tensor of the shape (transform_n, 8)"""
     # Generate random angles
-    angle_min, angle_max = rotate_range[0], rotate_range[1]
+    angle_min, angle_max = tf.cast(rotate_range[0], tf.dtypes.float32), tf.cast(rotate_range[1], tf.dtypes.float32)
     angles = tf.random.uniform(shape=(transform_n,), minval=angle_min, maxval=angle_max, seed=seed)
 
     # Generate random scaling factors
