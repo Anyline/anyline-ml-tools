@@ -141,12 +141,18 @@ def tf_normalize_mean_std(images):
 
 
 @tf.function
-def tf_random_brightness_contrast(image, brightness, contrast):
+def tf_random_brightness_contrast(image, brightness, contrast, version):
     """Random brightness/contrast adjustment"""
     out_image = tf.cast(image, tf.float32)
-    out_image = out_image / (tf.reduce_max(out_image) + 1.0e-7)
-    out_image = (out_image - 0.5) * tf.random.uniform((), minval=contrast[0], maxval=contrast[1]) + 0.5
-    out_image = out_image + tf.random.uniform((), minval=brightness[0], maxval=brightness[1])
+
+    if version == 'v1':
+        out_image = out_image / (tf.reduce_max(out_image) + 1.0e-7)
+        out_image = (out_image - 0.5) * tf.random.uniform((), minval=contrast[0], maxval=contrast[1]) + 0.5
+        out_image = out_image + tf.random.uniform((), minval=brightness[0], maxval=brightness[1])
+    elif version == 'v2':
+        out_image = out_image * tf.random.uniform((), minval=contrast[0], maxval=contrast[1])
+        out_image = out_image + tf.random.uniform((), minval=brightness[0], maxval=brightness[1])
+
     return tf.clip_by_value(out_image, 0.0, 1.0)
 
 
@@ -474,11 +480,12 @@ class BrightnessContrast(Augmentor):
         contrast (tuple) : tuple of two float values (minimum and maximum contrast factors)
 
     """
-    def __init__(self, brightness=0.0, contrast=1.0, num_parallel_calls=tf.data.experimental.AUTOTUNE,
+    def __init__(self, brightness=0.0, contrast=1.0, version="v1", num_parallel_calls=tf.data.experimental.AUTOTUNE,
                  augment_label=False):
         super(BrightnessContrast, self).__init__(num_parallel_calls, augment_label)
         self.brightness = init_range(brightness)
         self.contrast = init_scale_range(contrast)
+        self.version = version
 
     def transform_fn(self, batch_level=False):
         """Returns Tensorflow function performing random adjustments of brightness / contrast
@@ -489,10 +496,10 @@ class BrightnessContrast(Augmentor):
         """
         if self.augment_label:
             return tf_duplicated_transform_fn(tf_random_brightness_contrast, False, batch_level, tf.float32,
-                                              self.brightness, self.contrast)
+                                              self.brightness, self.contrast, self.version)
         else:
             return tf_apply_transform_fn(tf_random_brightness_contrast, False, batch_level, tf.float32,
-                                         self.brightness, self.contrast)
+                                         self.brightness, self.contrast, self.version)
 
 
 class HSV(Augmentor):
@@ -536,6 +543,43 @@ class HSV(Augmentor):
         else:
             return tf_apply_transform_fn(tf_random_hsv, True, batch_level, None,
                                          self.hue, self.saturation, self.value)
+
+
+class FloatDivision(Augmentor):
+    """
+    Casts and divides. The resulting image is of type tf.float32.
+
+    Args:
+        divisor (float) : defines the divisor by which the input image will be divided by
+        num_parallel_calls (int) : the number of parallel processes (see documentation of Augmentor class)
+        augment_label (bool) : if True the same transformation is applied to label.
+
+    Attributes:
+        scale_factor (float) : tuple of two float values (minimum and maximum brightness factors)
+
+    """
+
+    def __init__(self, divisor=1.0, num_parallel_calls=tf.data.experimental.AUTOTUNE, augment_label=False):
+        super(FloatDivision, self).__init__(num_parallel_calls, augment_label)
+        self.divisor = divisor
+
+    def transform_fn(self, batch_level=False):
+        """Returns Tensorflow function which casts images to floats and then divides them by a given divisor
+
+        Args:
+            batch_level (bool): if True, returned function processes image batches, otherwise individual images
+
+        """
+
+        @tf.function
+        def tf_float_divide(images, divisor):
+            out_images = tf.cast(images, tf.float32)
+            return out_images / divisor
+
+        if self.augment_label:
+            return tf_duplicated_transform_fn(tf_float_divide, True, batch_level, None, self.divisor)
+        else:
+            return tf_apply_transform_fn(tf_float_divide, True, batch_level, None, self.divisor)
 
 
 class InvertColor(Augmentor):
